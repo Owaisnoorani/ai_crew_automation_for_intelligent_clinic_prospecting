@@ -1,0 +1,56 @@
+---
+clinic_search_task:
+  description: Execute structured search queries based on {search_query} to identify
+    clinic websites and compile a unique list of {clinic_urls} using WebsiteSearchTool.
+  expected_output: A curated list of clinic website URLs stored in {clinic_urls}.
+  async_execution: false
+  agent: clinic_lead_finder
+clinic_web_extraction_task:
+  description: 'For each URL in {clinic_urls}, use ScrapeWebsiteTool, SeleniumScrapingTool,
+    and ScrapeElementFromWebsiteTool to extract key elements: {clinic_name}, {provider_name},
+    {credentials}, {contact_info}, and {location}. Also inspect the footer for additional
+    provider information.'
+  expected_output: A dataset with extracted information for each clinic, including
+    {clinic_name}, {provider_name}, {credentials}, {contact_info}, and {location}.
+  async_execution: false
+  agent: clinic_web_scraper
+  context:
+  - clinic_search_task
+clinic_data_classification_task:
+  description: Analyze the scraped data to classify each clinic by healthcare specialty
+    {specialty}, geographic location {location}, website provider {website_provider},
+    and ownership type (private vs corporate) using predefined criteria.
+  expected_output: A structured and categorized dataset with clinics sorted by {specialty},
+    {location}, {website_provider}, and ownership type.
+  async_execution: false
+  agent: clinic_data_classifier
+  context:
+  - clinic_web_extraction_task
+clinic_data_validation_task:
+  description: Validate and clean the extracted clinic data by eliminating duplicates,
+    removing incomplete entries, and cross-checking details to ensure accuracy.
+  expected_output: A clean and validated dataset with accurate entries for each clinic.
+  async_execution: false
+  agent: clinic_data_validator
+  context:
+  - clinic_data_classification_task
+clinic_data_storage_task:
+  description: Store the validated data into structured formats such as CSV, Excel,
+    and JSON, making the data accessible for internal dashboards and CRM system integration
+    (e.g. HubSpot, Salesforce).
+  expected_output: Data stored and formatted in CSV, Excel, and JSON formats ready
+    for CRM and dashboard integration.
+  async_execution: false
+  agent: clinic_data_integrator
+  context:
+  - clinic_data_validation_task
+clinic_prospecting_automation_task:
+  description: Automate the entire prospecting workflow to run at scheduled intervals
+    (daily or weekly) using the criteria defined in {search_query} and {clinic_urls}.
+    Monitor the process and trigger alerts for any discrepancies or errors.
+  expected_output: A fully automated clinic prospecting workflow with scheduling,
+    logging, and error alerts successfully implemented.
+  async_execution: false
+  agent: clinic_task_scheduler
+  context:
+  - clinic_data_storage_task
